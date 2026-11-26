@@ -3,46 +3,29 @@ import { createInterface } from "node:readline/promises";
 import { loadNearestEnv } from "./env.js";
 import { ResidentBot, loadHandbook } from "./bot.js";
 import { createOpik } from "./tracing.js";
+import { CONVERSATIONS, ratingsFor } from "./script.js";
 import type { Opik } from "opik";
 
 loadNearestEnv();
 
-export type Conversation = { id: string; resident: string; questions: string[] };
-
-export const CONVERSATIONS: Conversation[] = [
-  {
-    id: "laundry-and-quiet-hours",
-    resident: "unit-3B",
-    questions: [
-      "What time does the laundry room close?",
-      "I start a night shift and get home at 21:30. Can I still start a wash?",
-      "And if I run the dryer at 23:00, is that a noise problem?",
-    ],
-  },
-  {
-    id: "parking-and-packages",
-    resident: "unit-5D",
-    questions: [
-      "I don't have a garage space. What are my options?",
-      "My sister visits for a long weekend. How long can her car stay?",
-      "Also a 30 kg treadmill is arriving Thursday. Where should it be delivered?",
-    ],
-  },
-];
-
 async function playScripted(client: OpenAI, opik: Opik, handbook: string): Promise<void> {
+  const finalTraceIds = new Map<string, string>();
   for (const convo of CONVERSATIONS) {
     console.log(`\n=== ${convo.id} (${convo.resident}) ===`);
-    const bot = new ResidentBot(client, opik, handbook);
+    const bot = new ResidentBot(client, opik, convo.id, handbook);
     for (const question of convo.questions) {
       const turn = await bot.ask(question);
+      finalTraceIds.set(convo.id, turn.traceId);
       console.log(`\nResident: ${question}\nLark: ${turn.reply}  [${turn.totalTokens} tokens]`);
     }
   }
+  // Feedback scores attach to traces that already exist, so they can be logged after the run.
+  // They show up as the "resident-satisfaction" column in the Traces tab, and sort/filter like any metric.
+  opik.logTracesFeedbackScores(ratingsFor(CONVERSATIONS, finalTraceIds));
 }
 
 async function playInteractive(client: OpenAI, opik: Opik, handbook: string): Promise<void> {
-  const bot = new ResidentBot(client, opik, handbook);
+  const bot = new ResidentBot(client, opik, `interactive-${Date.now()}`, handbook);
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   console.log("Chat with Lark. Empty line to quit.");
   for (;;) {
