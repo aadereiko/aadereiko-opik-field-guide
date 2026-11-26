@@ -15,7 +15,7 @@ def otlp_endpoint_and_headers(env: dict[str, str]) -> tuple[str, str]:
     return f"{base}/v1/private/otel", ",".join(headers)
 
 
-def setup_tracing():
+def setup_tracing(exporter=None):
     from openinference.instrumentation.smolagents import SmolagentsInstrumentor
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.trace import TracerProvider
@@ -27,7 +27,7 @@ def setup_tracing():
 
     provider = TracerProvider()
     # Opik's OTLP endpoint receives these spans; the project comes from the projectName header, so every trace lands in one named project.
-    provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+    provider.add_span_processor(SimpleSpanProcessor(exporter or OTLPSpanExporter()))
     # The instrumentor turns each agent run into a trace and each step, model call and tool/code execution into a span, with the generated code and logs as attributes.
     SmolagentsInstrumentor().instrument(tracer_provider=provider)
     return provider
