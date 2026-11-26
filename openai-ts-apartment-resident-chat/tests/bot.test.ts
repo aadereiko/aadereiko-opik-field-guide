@@ -3,7 +3,7 @@ import type OpenAI from "openai";
 import { Opik } from "opik";
 import { ResidentBot, buildSystemPrompt, loadHandbook } from "../src/bot.js";
 import { CONVERSATIONS, ratingsFor } from "../src/script.js";
-import { PROJECT_NAME } from "../src/tracing.js";
+import { PROJECT_NAME, withLlmSpans } from "../src/tracing.js";
 
 function stubClient(replies: string[]): { client: OpenAI; seen: number[] } {
   const seen: number[] = [];
@@ -61,6 +61,17 @@ describe("ResidentBot with tracking disabled", () => {
     await bot.ask("three");
     expect(seen).toEqual([2, 4, 6]);
     expect(bot.messages.at(-1)).toEqual({ role: "assistant", content: "c" });
+  });
+});
+
+describe("withLlmSpans", () => {
+  it("forces span type llm and leaves other trace members alone", () => {
+    const calls: unknown[] = [];
+    const fakeTrace = { span: (d: unknown) => calls.push(d), marker: "kept" };
+    const wrapped = withLlmSpans(fakeTrace as never) as unknown as typeof fakeTrace;
+    wrapped.span({ name: "x", type: "general" } as never);
+    expect(calls).toEqual([{ name: "x", type: "llm" }]);
+    expect(wrapped.marker).toBe("kept");
   });
 });
 

@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { trackOpenAI } from "opik-openai";
 import type { Opik } from "opik";
+import { withLlmSpans } from "./tracing.js";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,7 +57,7 @@ export class ResidentBot {
     // with the model, token usage and estimated cost filled in by Opik.
     const tracked = trackOpenAI(this.client, {
       client: this.opik,
-      parent: trace,
+      parent: withLlmSpans(trace),
       generationName: "lark-reply",
     });
     try {

@@ -22,7 +22,7 @@ This example is "Lark", the assistant for Larkspur Court, a made-up 48-unit buil
 
 Open the `openai-ts-apartment-resident-chat` project in your Opik workspace.
 
-**Traces tab.** Six rows named `answer-resident-question`, with the question as input and Lark's reply as output. Open any row and you will find one child span called `lark-reply` (type `general`) with the model (`gpt-4o-mini-2024-07-18`), the token counts and an estimated cost. In one verified run the first conversation went 676, 719 and 781 tokens, and the second went 712, 774 and 827. The count climbs every turn because each call re-sends the system prompt (the handbook) plus the whole chat so far. The cost column follows: about $0.00011 for the first laundry question and about $0.00014 for the last parking one. The whole run came to under $0.001.
+**Traces tab.** Six rows named `answer-resident-question`, with the question as input and Lark's reply as output. Open any row and you will find one child span called `lark-reply`, typed `llm`, with the model (`gpt-4o-mini-2024-07-18`), the token counts and an estimated cost. In one verified run the first conversation went 676, 719 and 781 tokens, and the second went 712, 774 and 827. The count climbs every turn because each call re-sends the system prompt (the handbook) plus the whole chat so far. The cost column follows: about $0.00011 for the first laundry question and about $0.00014 for the last parking one. The whole run came to under $0.001.
 
 **Threads tab.** Two threads, `laundry-and-quiet-hours` and `parking-and-packages`, each with 6 messages (3 questions and 3 replies) and a total cost per thread (about $0.00035 and $0.00040 in the verified run). Click one to read the chat top to bottom.
 
@@ -57,6 +57,13 @@ Run the tests with `npm test`. To prove they never touch Opik, run them with tra
 ```json
 "overrides": { "opik-openai": { "opik": "$opik" } }
 ```
+
+**Spans from `opik-openai` show up as type `general`, not `llm`.**
+Usage, model and cost are filled in, but the span carries the generic type, so it does not get the LLM badge and LLM-only filters miss it. The wrapper accepts a `parent` trace and calls `parent.span(...)` on it, so `src/tracing.ts` hands it a proxy whose `span()` sets the type to `llm`:
+```ts
+parent: withLlmSpans(trace)
+```
+Spans are `llm` in the verified run. If a later `opik-openai` release sets the type itself, the proxy becomes a harmless no-op you can delete.
 
 **`searchSpans({ traceId })` returns every span in the project, not just that trace's.**
 When checking a run from a script, the `traceId` option did not narrow the result in SDK 2.3.4: each of the six traces appeared to have six spans. Use a filter string instead:
