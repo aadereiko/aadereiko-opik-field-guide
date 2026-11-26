@@ -1,0 +1,15 @@
+[project]
+name = "whisper-rescue-radio-log"
+version = "0.1.0"
+description = "Mountain rescue radio calls: OpenAI TTS -> Whisper -> structured incident log entries"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=1.60",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
