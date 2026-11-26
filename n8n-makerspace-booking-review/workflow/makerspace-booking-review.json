@@ -1,0 +1,197 @@
+{
+  "name": "Makerspace booking review",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "id": "6b1f0c2e-1a7d-4c3e-9e01-a1b2c3d40001",
+      "name": "Booking request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "3c9d7e14-8f2a-4b6c-a0d5-a1b2c3d40002",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "makerspace-booking",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "6b1f0c2e-1a7d-4c3e-9e01-a1b2c3d40003",
+      "name": "Look up inductions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "i1",
+              "name": "inductions",
+              "type": "array",
+              "value": "={{ ({ 'M-104': ['laser cutter', '3d printer'], 'M-142': ['3d printer'], 'M-221': ['cnc router', 'laser cutter'], 'M-317': ['3d printer', 'laser cutter'], 'M-388': ['table saw', 'cnc router'] })[$json.body.member_id] ?? [] }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6b1f0c2e-1a7d-4c3e-9e01-a1b2c3d40004",
+      "name": "Review booking (gpt-4o-mini)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You review equipment booking requests for the Foundry Lane Makerspace. House rules:\n1. A member may only book a tool they hold an induction for. The member's inductions are listed in the request.\n2. Maximum booking length: laser cutter 2 hours, CNC router 3 hours, table saw 2 hours, 3D printer 12 hours.\n3. The shop is staffed from 09:00 to 21:00. Laser cutter, CNC router and table saw bookings must start and end inside those hours. The 3D printer may run unattended overnight.\n4. Table saw only: a table saw booking needs a buddy, a second member with a table saw induction, named in the request. This rule does not apply to any other tool.\nCheck only the rules that apply to the requested tool. Decide one of: approve (every applicable rule is met), approve_with_changes (it can go ahead if the start time or length is adjusted; say exactly how), decline (an applicable rule cannot be met by adjusting the time, e.g. no induction for this tool, or a table saw booking without a buddy). Reply with a JSON object with exactly these keys: decision, reason (one sentence that names the rule), changes (an array of short strings; empty unless the decision is approve_with_changes)."
+            },
+            {
+              "role": "user",
+              "content": "=Member: {{ $json.body.member }} ({{ $json.body.member_id }})\nInductions held: {{ $json.inductions.length ? $json.inductions.join(', ') : 'none' }}\nTool requested: {{ $json.body.tool }}\nStart: {{ $json.body.start }}\nHours: {{ $json.body.hours }}\n{{ $json.body.tool === 'table saw' ? 'Buddy: ' + ($json.body.buddy || 'none named') + '\\n' : '' }}Project: {{ $json.body.project }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "__OPENAI_CREDENTIAL_ID__",
+          "name": "OpenAI (makerspace bookings)"
+        }
+      }
+    },
+    {
+      "id": "6b1f0c2e-1a7d-4c3e-9e01-a1b2c3d40005",
+      "name": "Shape the decision",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1",
+              "name": "member",
+              "type": "string",
+              "value": "={{ $('Booking request').item.json.body.member }}"
+            },
+            {
+              "id": "d2",
+              "name": "tool",
+              "type": "string",
+              "value": "={{ $('Booking request').item.json.body.tool }}"
+            },
+            {
+              "id": "d3",
+              "name": "decision",
+              "type": "string",
+              "value": "={{ $json.message.content.decision }}"
+            },
+            {
+              "id": "d4",
+              "name": "reason",
+              "type": "string",
+              "value": "={{ $json.message.content.reason }}"
+            },
+            {
+              "id": "d5",
+              "name": "changes",
+              "type": "array",
+              "value": "={{ $json.message.content.changes }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6b1f0c2e-1a7d-4c3e-9e01-a1b2c3d40006",
+      "name": "Reply to member",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Booking request": {
+      "main": [
+        [
+          {
+            "node": "Look up inductions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Look up inductions": {
+      "main": [
+        [
+          {
+            "node": "Review booking (gpt-4o-mini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Review booking (gpt-4o-mini)": {
+      "main": [
+        [
+          {
+            "node": "Shape the decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape the decision": {
+      "main": [
+        [
+          {
+            "node": "Reply to member",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
