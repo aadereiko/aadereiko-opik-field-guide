@@ -1,0 +1,14 @@
+[
+  {"id": "B01", "title": "The Lantern Keeper's Daughter", "author": "Ines Varga", "genre": "mystery", "pages": 312, "blurb": "A lighthouse keeper's daughter untangles a smuggling ring along a foggy northern coast."},
+  {"id": "B02", "title": "Salt and Cinder", "author": "Tomas Reyes", "genre": "fantasy", "pages": 540, "blurb": "A deckhand discovers she can bargain with the ash spirits that haunt a drowned city."},
+  {"id": "B03", "title": "Small Hours at the Laundromat", "author": "Priya Anand", "genre": "literary fiction", "pages": 188, "blurb": "Four night-shift regulars slowly become a family over one long winter."},
+  {"id": "B04", "title": "The Orchard Algorithm", "author": "Dale Whitcombe", "genre": "science fiction", "pages": 402, "blurb": "A farm-management AI starts to suspect the harvest it optimizes is not meant for people."},
+  {"id": "B05", "title": "Notes on Building a Bread Oven", "author": "Maren Olsen", "genre": "nonfiction", "pages": 224, "blurb": "A practical, funny guide to building a wood-fired clay oven in a small backyard."},
+  {"id": "B06", "title": "Kestrel Station", "author": "Yuki Hasegawa", "genre": "science fiction", "pages": 276, "blurb": "Six scientists on a polar research base notice the radio is answering back."},
+  {"id": "B07", "title": "A Quiet Season of Rain", "author": "Amara Okafor", "genre": "romance", "pages": 296, "blurb": "Two rival bakers in a rainy river town are forced to share one oven."},
+  {"id": "B08", "title": "The Cartographer's Apprentice", "author": "Ellis Fontaine", "genre": "fantasy", "pages": 368, "blurb": "Maps drawn by a young apprentice begin to change the land they describe."},
+  {"id": "B09", "title": "Ten Thousand Steps to Nowhere", "author": "Lucia Bianchi", "genre": "nonfiction", "pages": 256, "blurb": "A memoir of walking across three countries with no plan and a bad pair of boots."},
+  {"id": "B10", "title": "Dust Bowl Lullaby", "author": "Harlan Pike", "genre": "historical fiction", "pages": 448, "blurb": "A family of musicians crosses the 1930s plains, trading songs for water."},
+  {"id": "B11", "title": "The Nine Clocks of Halloran House", "author": "Ines Varga", "genre": "mystery", "pages": 334, "blurb": "Every clock in a country house stopped at a different minute on the night of the murder."},
+  {"id": "B12", "title": "Paper Boats for Mina", "author": "Sunil Rao", "genre": "children's", "pages": 64, "blurb": "A picture book about a girl who sends messages to her grandmother down the city canal."}
+]

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Marlowe Street Library chat</title>
+<style>body{font:16px system-ui;max-width:520px;margin:2rem auto}#log p{margin:.4rem 0}form{display:flex;gap:.5rem;margin-top:1rem}input{flex:1;padding:.5rem}</style></head>
+<body><h2>Ask a librarian</h2><div id="log"></div>
+<form id="f"><input id="m" placeholder="What should I read next?" autocomplete="off"><button>Send</button></form>
+<script>
+const sid = crypto.randomUUID();
+const log = document.getElementById("log");
+const add = (who, t) => { const p = document.createElement("p"); p.textContent = who + ": " + t; log.appendChild(p); };
+document.getElementById("f").onsubmit = async (e) => {
+  e.preventDefault();
+  const m = document.getElementById("m"); const text = m.value.trim(); if (!text) return;
+  m.value = ""; add("You", text);
+  const r = await fetch("/chat", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({message: text, session_id: sid})});
+  add("Librarian", r.ok ? (await r.json()).reply : "Sorry, something went wrong.");
+};
+</script></body></html>
