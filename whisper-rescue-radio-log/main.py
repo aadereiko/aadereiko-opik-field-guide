@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from dotenv import find_dotenv, load_dotenv
@@ -7,8 +8,13 @@ EXAMPLE_DIR = Path(__file__).resolve().parent
 DATA_DIR = EXAMPLE_DIR / "data"
 
 load_dotenv(find_dotenv())
+# The project name must be set before opik is imported, or traces go to "Default Project".
+os.environ["OPIK_PROJECT_NAME"] = "whisper-rescue-radio-log"
 
+import opik
 from openai import OpenAI
+from opik import Attachment, opik_context
+from opik.integrations.openai import track_openai
 
 from calls import RADIO_CALLS
 from logbook import EXTRACTION_PROMPT, LogEntry, entry_to_dict, format_entry, parse_entry
@@ -17,9 +23,13 @@ TTS_MODEL = "gpt-4o-mini-tts"
 TRANSCRIBE_MODEL = "whisper-1"
 EXTRACT_MODEL = "gpt-4o-mini"
 
-client = OpenAI()
+# track_openai wraps the client: every TTS, Whisper and chat call becomes a child span
+# under whichever tracked function is running, with usage and cost where Opik can price it.
+client = track_openai(OpenAI())
 
 
+# @opik.track opens a "general" span named synthesize-audio that groups the per-turn TTS spans.
+@opik.track(name="synthesize-audio")
 def synthesize_audio(call: dict, audio_path: Path) -> None:
     audio = b""
     for _speaker, voice, text in call["segments"]:
@@ -30,6 +40,7 @@ def synthesize_audio(call: dict, audio_path: Path) -> None:
     audio_path.write_bytes(audio)
 
 
+@opik.track(name="transcribe")
 def transcribe(audio_path: Path) -> str:
     with audio_path.open("rb") as audio_file:
         return client.audio.transcriptions.create(
@@ -37,6 +48,7 @@ def transcribe(audio_path: Path) -> str:
         )
 
 
+@opik.track(name="extract-entry")
 def extract_entry(transcript: str) -> LogEntry:
     response = client.chat.completions.create(
         model=EXTRACT_MODEL,
@@ -49,6 +61,8 @@ def extract_entry(transcript: str) -> LogEntry:
     return parse_entry(response.choices[0].message.content)
 
 
+# The outermost tracked function: one call to it is one trace in the project.
+@opik.track(name="log-radio-call")
 def log_radio_call(call: dict) -> dict:
     audio_path = DATA_DIR / f"{call['id']}.mp3"
     if not audio_path.exists():
@@ -56,6 +70,11 @@ def log_radio_call(call: dict) -> dict:
 
     transcript = transcribe(audio_path)
     entry = extract_entry(transcript)
+
+    # Attachment uploads the MP3 to the trace, where the UI plays it inline.
+    opik_context.update_current_trace(
+        attachments=[Attachment(data=str(audio_path), content_type="audio/mpeg")]
+    )
 
     result = {"call": call["title"], "transcript": transcript, "entry": entry_to_dict(entry)}
     (DATA_DIR / f"{call['id']}.json").write_text(json.dumps(result, indent=2))
@@ -69,3 +88,5 @@ if __name__ == "__main__":
         result = log_radio_call(call)
         print(f"Heard: {result['transcript'].strip()}\n")
         print(format_entry(parse_entry(json.dumps(result["entry"]))))
+    # Traces are sent in the background; flush so a short script doesn't exit before they upload.
+    opik.flush_tracker()
