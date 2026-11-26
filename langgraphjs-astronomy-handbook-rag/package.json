@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "demo": "tsx src/main.ts",
+    "inspect": "tsx src/inspect.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

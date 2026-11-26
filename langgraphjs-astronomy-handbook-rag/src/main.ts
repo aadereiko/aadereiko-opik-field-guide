@@ -1,5 +1,7 @@
 import { PROJECT_NAME } from "./env.js";
 import { OpikCallbackHandler } from "opik-langchain";
+import { Opik } from "opik";
+import { runExperiment } from "./evaluate.js";
 import { createApp } from "./rag.js";
 
 const QUESTIONS = [
@@ -20,6 +22,13 @@ async function main() {
     // Without this flush the process can exit before the batched trace is sent.
     await opikHandler.flushAsync();
   }
+
+  const client = new Opik({ projectName: PROJECT_NAME });
+  const k = Number(process.env.RETRIEVE_K ?? 3);
+  const result = await runExperiment(client, k);
+  console.log(`Experiment ${result.experimentName} (${result.experimentId})`);
+  // Dataset rows, experiment items and scores are batched; flush before the process exits.
+  await client.flush();
 }
 
 main().catch((error) => {
