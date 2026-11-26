@@ -1,0 +1,23 @@
+[
+  {
+    "conversation_id": "sunset-silhouettes",
+    "turns": [
+      "I want to shoot silhouettes of my friends at sunset on a beach. Where do I start with settings?",
+      "The sky looks great but the people come out a bit grey, not fully black. What am I doing wrong?"
+    ]
+  },
+  {
+    "conversation_id": "first-prime-lens",
+    "turns": [
+      "I have a kit zoom and want my first prime lens for portraits. 35mm or 50mm?",
+      "Is f/1.8 enough or should I save for f/1.4?"
+    ]
+  },
+  {
+    "conversation_id": "off-topic-detour",
+    "turns": [
+      "How do I get softer window light for indoor portraits?",
+      "Unrelated: can you write me a recipe for lasagna?"
+    ]
+  }
+]
