@@ -1,5 +1,6 @@
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 
 from dotenv import find_dotenv, load_dotenv
@@ -23,9 +24,11 @@ TTS_MODEL = "gpt-4o-mini-tts"
 TRANSCRIBE_MODEL = "whisper-1"
 EXTRACT_MODEL = "gpt-4o-mini"
 
-# track_openai wraps the client: every TTS, Whisper and chat call becomes a child span
-# under whichever tracked function is running, with usage and cost where Opik can price it.
-client = track_openai(OpenAI())
+@lru_cache
+def get_client() -> OpenAI:
+    # track_openai wraps the client: every TTS and chat call becomes a child llm span under
+    # the running tracked function, with token usage and cost. Whisper calls are not wrapped.
+    return track_openai(OpenAI())
 
 
 # @opik.track opens a "general" span named synthesize-audio that groups the per-turn TTS spans.
@@ -33,7 +36,7 @@ client = track_openai(OpenAI())
 def synthesize_audio(call: dict, audio_path: Path) -> None:
     audio = b""
     for _speaker, voice, text in call["segments"]:
-        response = client.audio.speech.create(
+        response = get_client().audio.speech.create(
             model=TTS_MODEL, voice=voice, input=text, response_format="mp3"
         )
         audio += response.content
@@ -43,14 +46,14 @@ def synthesize_audio(call: dict, audio_path: Path) -> None:
 @opik.track(name="transcribe")
 def transcribe(audio_path: Path) -> str:
     with audio_path.open("rb") as audio_file:
-        return client.audio.transcriptions.create(
+        return get_client().audio.transcriptions.create(
             model=TRANSCRIBE_MODEL, file=audio_file, response_format="text"
         )
 
 
 @opik.track(name="extract-entry")
 def extract_entry(transcript: str) -> LogEntry:
-    response = client.chat.completions.create(
+    response = get_client().chat.completions.create(
         model=EXTRACT_MODEL,
         messages=[
             {"role": "system", "content": EXTRACTION_PROMPT},
