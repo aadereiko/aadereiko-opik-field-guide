@@ -36,19 +36,27 @@ def estimate_payout_data(policy_id: str, damage_type: str, repair_hours: float, 
     return {"gross_usd": gross, "deductible_usd": policy["deductible_usd"], "payout_usd": payout}
 
 
+FILED_CLAIMS: dict[tuple[str, str], dict] = {}
+
+
 def file_claim_data(policy_id: str, damage_type: str, description: str) -> dict:
     policy = POLICIES.get(policy_id.upper())
     if policy is None:
         return {"error": f"no policy {policy_id}"}
     if not policy["active"]:
         return {"error": "policy is not active"}
-    return {
+    key = (policy_id.upper(), damage_type.lower())
+    if key in FILED_CLAIMS:
+        return {**FILED_CLAIMS[key], "status": "already_filed"}
+    claim = {
         "status": "filed",
         "claim_id": f"CLM-{uuid.uuid4().hex[:6].upper()}",
         "policy_id": policy_id.upper(),
         "damage_type": damage_type,
         "description": description,
     }
+    FILED_CLAIMS[key] = claim
+    return claim
 
 
 @function_tool

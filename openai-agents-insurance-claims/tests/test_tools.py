@@ -1,6 +1,11 @@
-import json
+import pytest
 
-from tools import estimate_payout_data, file_claim_data, lookup_policy, lookup_policy_data
+from tools import FILED_CLAIMS, estimate_payout_data, file_claim_data, lookup_policy, lookup_policy_data
+
+
+@pytest.fixture(autouse=True)
+def clear_filed_claims():
+    FILED_CLAIMS.clear()
 
 
 def test_lookup_is_case_insensitive_and_reports_unknown():
@@ -31,3 +36,10 @@ def test_filing_returns_claim_id():
 
 def test_tool_names_exposed_to_the_model():
     assert lookup_policy.name == "lookup_policy"
+
+
+def test_filing_twice_returns_the_same_claim():
+    first = file_claim_data("AU-9082", "collision", "rear bumper")
+    second = file_claim_data("au-9082", "Collision", "rear bumper again")
+    assert second["status"] == "already_filed"
+    assert second["claim_id"] == first["claim_id"]

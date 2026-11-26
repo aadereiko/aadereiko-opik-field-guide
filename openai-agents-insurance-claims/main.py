@@ -25,10 +25,11 @@ home_agent = Agent(
     name="Home Claims Agent",
     handoff_description="Handles home claims: water damage, fire, theft, storm.",
     instructions=(
-        "You handle home insurance claims. Always lookup_policy first. If the damage is "
-        "covered and the policy is active, use estimate_payout when the customer gives "
-        "repair hours and parts cost, and file_claim when they ask to file. If it is not "
-        "covered, say so plainly. Keep replies short."
+        "You handle home insurance claims. Always lookup_policy first. If it is not covered "
+        "or inactive, say so plainly. Otherwise ask for repair hours and parts cost if the "
+        "customer has not given them, and never guess them. Call estimate_payout only with "
+        "numbers the customer stated. Call file_claim only after the customer explicitly "
+        "asks to file, and at most once per claim. Keep replies short."
     ),
     model=MODEL,
     tools=[lookup_policy, estimate_payout, file_claim],
@@ -38,10 +39,11 @@ auto_agent = Agent(
     name="Auto Claims Agent",
     handoff_description="Handles auto claims: collision, glass, theft of a vehicle.",
     instructions=(
-        "You handle auto insurance claims. Always lookup_policy first. If the damage is "
-        "covered and the policy is active, use estimate_payout when the customer gives "
-        "repair hours and parts cost, and file_claim when they ask to file. If it is not "
-        "covered or the policy is inactive, say so plainly. Keep replies short."
+        "You handle auto insurance claims. Always lookup_policy first. If it is not covered "
+        "or inactive, say so plainly. Otherwise ask for repair hours and parts cost if the "
+        "customer has not given them, and never guess them. Call estimate_payout only with "
+        "numbers the customer stated. Call file_claim only after the customer explicitly "
+        "asks to file, and at most once per claim. Keep replies short."
     ),
     model=MODEL,
     tools=[lookup_policy, estimate_payout, file_claim],
@@ -82,15 +84,18 @@ def run_demo() -> None:
         thread_id = f"{conversation_id}-{uuid.uuid4().hex[:8]}"
         print(f"\n=== Conversation: {conversation_id} (thread {thread_id}) ===")
         conversation_input = []
+        current_agent = triage_agent
         for user_message in user_turns:
             print(f"\nCustomer: {user_message}")
             conversation_input.append({"role": "user", "content": user_message})
             # group_id becomes the Opik thread id, so all turns of one conversation
             # appear as a single thread in the Threads tab instead of loose traces.
             with trace(workflow_name="Claim intake", group_id=thread_id):
-                result = Runner.run_sync(triage_agent, conversation_input)
+                result = Runner.run_sync(current_agent, conversation_input)
             print(f"Agent ({result.last_agent.name}): {result.final_output}")
             conversation_input = result.to_input_list()
+            # Resume with the specialist, not triage: restarting at triage let it answer claim math itself, with no tools.
+            current_agent = result.last_agent
 
 
 if __name__ == "__main__":
