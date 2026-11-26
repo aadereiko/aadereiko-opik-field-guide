@@ -1,0 +1,32 @@
+{
+  "name": "opik-ts-science-fair-feedback-prompts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "demo": "tsx src/demo.ts",
+    "check": "tsx src/check.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "openai": "^6.0.0",
+    "opik": "2.3.4",
+    "opik-openai": "2.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0"
+  },
+  "overrides": {
+    "opik-openai": {
+      "opik": "$opik"
+    }
+  }
+}
