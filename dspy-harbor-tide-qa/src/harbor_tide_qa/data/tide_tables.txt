@@ -1,0 +1,18 @@
+Kestrel Quay harbour office - tide tables and passage rules
+
+[HT-1] On spring tides, high water at Kestrel Quay comes at 06:42 and 19:07
+and reaches 5.2 m above chart datum.
+[HT-2] On neap tides, high water reaches only 3.4 m and arrives about 50
+minutes later than on springs.
+[LT-1] On spring tides, low water falls at 12:55 and drops to 0.3 m. The
+quay berths dry out below 0.8 m of tide.
+[BAR-1] The Gull Bar can be crossed only when the tide stands at 2.5 m or
+more, and only by vessels drawing 1.8 m or less.
+[LOCK-1] The Tern Lock opens 90 minutes before high water and closes 30
+minutes after it. Lock calls go out on VHF channel 14.
+[FLOW-1] The ebb stream in the Narrows runs at up to 4 knots. Slack water
+lasts about 20 minutes.
+[WARN-1] When the harbour office flies the amber pennant, add 0.6 m to every
+predicted height to allow for storm surge.
+[POST-1] Revised tables are posted every Monday at 08:00 on the quay
+noticeboard. The booklet edition in force is TT-2026.
