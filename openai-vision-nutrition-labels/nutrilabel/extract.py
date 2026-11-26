@@ -10,7 +10,7 @@ from openai import OpenAI  # noqa: E402
 from opik import Attachment, opik_context  # noqa: E402
 from opik.integrations.openai import track_openai  # noqa: E402
 
-from nutrilabel.schema import NutritionFacts, json_schema  # noqa: E402
+from nutrilabel.schema import NutritionFacts, check_consistency, json_schema  # noqa: E402
 
 SYSTEM_PROMPT = """\
 You read photos of packaged-food nutrition labels and return typed fields.
@@ -70,4 +70,17 @@ def extract_facts(image_path: str | Path) -> NutritionFacts:
             "json_schema": {"name": "nutrition_facts", "strict": True, "schema": json_schema()},
         },
     )
-    return NutritionFacts.model_validate_json(response.choices[0].message.content)
+    facts = NutritionFacts.model_validate_json(response.choices[0].message.content)
+    problems = check_consistency(facts)
+    # A feedback score is a named number on the trace: the macro check shows up as a column in the
+    # traces table, so impossible readings (calories vs macros, sugars > carbs) can be filtered.
+    opik_context.update_current_trace(
+        feedback_scores=[
+            {
+                "name": "macro_consistency",
+                "value": 0.0 if problems else 1.0,
+                "reason": "; ".join(problems) or "calories match macros",
+            }
+        ]
+    )
+    return facts

@@ -29,6 +29,18 @@ def cmd_extract(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    from nutrilabel.suite import run_suite
+
+    result = run_suite(args.experiment)
+    print(f"Pass rate: {result.pass_rate:.0%} ({result.items_passed}/{result.items_total} labels)")
+    for item_result in result.item_results.values():
+        label = item_result.test_results[0].test_case.task_output["input"]["label"]
+        print(f"  [{'PASS' if item_result.passed else 'FAIL'}] {label}")
+    print(f"Experiment: {result.experiment_name} ({result.experiment_url})")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="nutrilabel", description="Read nutrition-facts labels with a vision model")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -40,6 +52,10 @@ def main(argv: list[str] | None = None) -> int:
     ext = sub.add_parser("extract", help="read one label (an image path or a sample slug like 'granola')")
     ext.add_argument("image")
     ext.set_defaults(func=cmd_extract)
+
+    run = sub.add_parser("run", help="extract every sample label and grade the results with a test suite")
+    run.add_argument("--experiment", default="label-reader-gpt-4o-mini")
+    run.set_defaults(func=cmd_run)
 
     args = parser.parse_args(argv)
     return args.func(args)
