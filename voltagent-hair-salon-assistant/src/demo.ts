@@ -16,13 +16,16 @@ if (!process.env.OPENAI_API_KEY) {
 
 const { VoltAgent } = await import("@voltagent/core");
 const { createFrontDeskAgent } = await import("./agent.ts");
+const { createObservability } = await import("./observability.ts");
 
 const frontDesk = createFrontDeskAgent();
-new VoltAgent({ agents: { frontDesk } });
+const observability = createObservability();
+// Handing the Opik-wired observability to VoltAgent is the whole integration: every generateText call becomes one trace.
+new VoltAgent({ agents: { frontDesk }, observability });
 
 const REQUESTS = [
   "How long does a balayage take and what does it cost?",
-  "I'd like a balayage on December 2nd with whoever is free in the morning. I'm Dana Whitfield.",
+  "Please book me a balayage with Ines on December 2nd at 9:00 in the morning. I'm Dana Whitfield.",
   "Can Tomas do my men's cut on 2026-12-01 at 09:00? Name is Leo Marsh.",
 ];
 
@@ -33,4 +36,6 @@ for (const [i, request] of REQUESTS.entries()) {
   console.log(`Assistant: ${result.text}`);
 }
 
+await observability.shutdown();
+console.log('\nDone. Open the "voltagent-hair-salon-assistant" project in Opik.');
 process.exit(0);
