@@ -12,6 +12,8 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
 
 def cmd_extract(args: argparse.Namespace) -> int:
+    import opik
+
     from nutrilabel.extract import extract_facts
 
     target = Path(args.image)
@@ -19,6 +21,8 @@ def cmd_extract(args: argparse.Namespace) -> int:
         generate_all()
         target = path_for(args.image)
     facts = extract_facts(target)
+    # Traces are sent in batches from a background thread; a short CLI must flush before it exits.
+    opik.flush_tracker()
     print(facts.model_dump_json(indent=2))
     for problem in check_consistency(facts):
         print(f"warning: {problem}")

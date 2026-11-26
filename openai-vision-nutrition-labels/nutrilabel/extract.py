@@ -5,7 +5,10 @@ from nutrilabel import config
 
 config.load_env()
 
+import opik  # noqa: E402
 from openai import OpenAI  # noqa: E402
+from opik import Attachment, opik_context  # noqa: E402
+from opik.integrations.openai import track_openai  # noqa: E402
 
 from nutrilabel.schema import NutritionFacts, json_schema  # noqa: E402
 
@@ -28,7 +31,8 @@ _client: OpenAI | None = None
 def get_client() -> OpenAI:
     global _client
     if _client is None:
-        _client = OpenAI()
+        # track_openai wraps the client: every completion becomes an llm span with token usage and cost.
+        _client = track_openai(OpenAI(), project_name=config.PROJECT_NAME)
     return _client
 
 
@@ -36,8 +40,16 @@ def encode_image(path: Path) -> str:
     return base64.b64encode(path.read_bytes()).decode()
 
 
+# @opik.track makes each call one trace; the completion span from track_openai nests inside it.
+@opik.track(name="extract_nutrition_label", project_name=config.PROJECT_NAME)
 def extract_facts(image_path: str | Path) -> NutritionFacts:
     path = Path(image_path)
+    # The attachment stores the PNG itself on the trace, so the Opik UI shows the exact pixels
+    # the model saw next to its output. Without it the span input is a huge base64 string.
+    opik_context.update_current_trace(
+        attachments=[Attachment(data=str(path), content_type="image/png")],
+        metadata={"label_file": path.name},
+    )
     response = get_client().chat.completions.create(
         model=config.MODEL,
         messages=[

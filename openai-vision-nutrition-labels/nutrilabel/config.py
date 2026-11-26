@@ -13,3 +13,5 @@ def load_env() -> None:
     load_dotenv(find_dotenv(usecwd=True))
     load_dotenv(ROOT / ".env")
     os.environ.pop("OPENAI_BASE_URL", None)
+    # Opik reads this variable when it creates traces, so every trace lands in one project.
+    os.environ["OPIK_PROJECT_NAME"] = PROJECT_NAME
