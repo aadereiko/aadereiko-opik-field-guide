@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import { createInterface } from "node:readline/promises";
 import { loadNearestEnv } from "./env.js";
 import { ResidentBot, loadHandbook } from "./bot.js";
+import { createOpik } from "./tracing.js";
+import type { Opik } from "opik";
 
 loadNearestEnv();
 
@@ -28,10 +30,10 @@ export const CONVERSATIONS: Conversation[] = [
   },
 ];
 
-async function playScripted(client: OpenAI, handbook: string): Promise<void> {
+async function playScripted(client: OpenAI, opik: Opik, handbook: string): Promise<void> {
   for (const convo of CONVERSATIONS) {
     console.log(`\n=== ${convo.id} (${convo.resident}) ===`);
-    const bot = new ResidentBot(client, handbook);
+    const bot = new ResidentBot(client, opik, handbook);
     for (const question of convo.questions) {
       const turn = await bot.ask(question);
       console.log(`\nResident: ${question}\nLark: ${turn.reply}  [${turn.totalTokens} tokens]`);
@@ -39,8 +41,8 @@ async function playScripted(client: OpenAI, handbook: string): Promise<void> {
   }
 }
 
-async function playInteractive(client: OpenAI, handbook: string): Promise<void> {
-  const bot = new ResidentBot(client, handbook);
+async function playInteractive(client: OpenAI, opik: Opik, handbook: string): Promise<void> {
+  const bot = new ResidentBot(client, opik, handbook);
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   console.log("Chat with Lark. Empty line to quit.");
   for (;;) {
@@ -53,9 +55,15 @@ async function playInteractive(client: OpenAI, handbook: string): Promise<void> 
 
 async function main(): Promise<void> {
   const client = new OpenAI();
+  const opik = createOpik();
   const handbook = loadHandbook();
-  if (process.argv.includes("--interactive")) await playInteractive(client, handbook);
-  else await playScripted(client, handbook);
+  try {
+    if (process.argv.includes("--interactive")) await playInteractive(client, opik, handbook);
+    else await playScripted(client, opik, handbook);
+  } finally {
+    // Traces are sent in batches in the background; a short script exits before the batch goes out unless you flush.
+    await opik.flush();
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
