@@ -1,0 +1,23 @@
+title: Read feature flags from a YAML file at startup
+--- a/app/flags.py
++++ b/app/flags.py
+@@ -1,9 +1,21 @@
+ import yaml
+ 
+-FLAGS = {}
++FLAGS = {}
++_loaded = False
+ 
+ 
+ def load_flags(path: str) -> None:
+-    pass
++    global _loaded
++    f = open(path)
++    data = yaml.load(f.read(), Loader=yaml.Loader)
++    for name, value in data["flags"].items():
++        FLAGS[name] = bool(value)
++    _loaded = True
++
++
++def is_enabled(name: str) -> bool:
++    return FLAGS.get(name, False)

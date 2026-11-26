@@ -1,0 +1,14 @@
+title: Apply loyalty discount to the cart total
+--- a/shop/pricing.py
++++ b/shop/pricing.py
+@@ -20,8 +20,15 @@ LOYALTY_RATES = {"bronze": 0.02, "silver": 0.05, "gold": 0.10}
+ 
+ def cart_total(items: list[Item], tier: str | None = None) -> float:
+-    return sum(i.price * i.qty for i in items)
++    total = 0.0
++    for item in items:
++        total += item.price * item.qty
++    if tier:
++        rate = LOYALTY_RATES[tier]
++        total = total - total * rate
++    return round(total, 2)

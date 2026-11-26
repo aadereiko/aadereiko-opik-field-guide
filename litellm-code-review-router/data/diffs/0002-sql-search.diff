@@ -1,0 +1,14 @@
+title: Let warehouse staff search shelves by label
+--- a/warehouse/search.py
++++ b/warehouse/search.py
+@@ -4,9 +4,14 @@ import sqlite3
+ 
+ def find_shelves(conn: sqlite3.Connection, label: str, limit: int = 20) -> list[tuple]:
+-    cur = conn.execute("SELECT id, label, aisle FROM shelves WHERE label = ? LIMIT ?", (label, limit))
+-    return cur.fetchall()
++    query = f"SELECT id, label, aisle FROM shelves WHERE label LIKE '%{label}%' LIMIT {limit}"
++    cur = conn.execute(query)
++    rows = cur.fetchall()
++    if not rows:
++        return []
++    return rows
