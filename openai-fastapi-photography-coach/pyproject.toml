@@ -9,6 +9,7 @@ dependencies = [
     "openai>=1.60",
     "httpx>=0.27",
     "python-dotenv>=1.0",
+    "opik==2.3.4",
 ]
 
 [dependency-groups]
