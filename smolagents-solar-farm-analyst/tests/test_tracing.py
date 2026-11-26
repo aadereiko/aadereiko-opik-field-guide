@@ -44,3 +44,15 @@ def test_traced_agent_run_works_with_tracking_disabled_and_a_stub_model():
         SmolagentsInstrumentor().uninstrument()
     assert answer == "B2"
     assert any(s.name == "CodeAgent.run" for s in exporter.get_finished_spans())
+
+
+def test_tag_provider_marks_llm_spans_only():
+    from opentelemetry.sdk.trace import ReadableSpan
+
+    def span(attrs):
+        return ReadableSpan(name="s", attributes=attrs)
+
+    tagged = tracing.tag_provider(span({"llm.model_name": "gpt-4o-mini"}))
+    assert tagged.attributes["gen_ai.system"] == "openai"
+    plain = span({"openinference.span.kind": "CHAIN"})
+    assert tracing.tag_provider(plain) is plain

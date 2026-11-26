@@ -45,9 +45,15 @@ Click one and expand the tree:
   Its usage shows prompt and completion tokens, and the prompt tokens grow step by step as observations pile up.
 - The last step is a `FinalAnswerTool` span carrying the sentence that becomes the trace output.
 
-Run `uv run python verify.py` to see the same thing as text. In one verified run the questions took 2, 3 and 2 model
-calls (5,635, 8,430 and 5,383 tokens), and all three answers matched the CSV: B2 about 13% below the fleet median,
-14 May with 3,620.40 kWh the day before, and 88.52, 96.26 and 83.36 MWh for April, May and June.
+Run `uv run python verify.py` to see the same thing as text. In the verified run the three questions took 2, 4 and
+2 model calls (5,549, 11,339 and 5,421 tokens), costing $0.00105, $0.00194 and $0.00102 as shown in each `llm`
+span's cost. Two answers matched the CSV (14 May with 3,620.40 kWh the day before; 88.52, 96.26 and 83.36 MWh for
+April, May and June). **The first answer was wrong**, and that is the point: the agent said array A1 was 100%
+below the median. Open the `llm` span before it and the code explains why. It computed one performance value per
+*row* and took `idxmin()`, so it picked the storm-day row where output was zero, instead of averaging per array.
+The correct answer is B2, about 13% below. The number looked precise; the trace shows the method was wrong.
+`verify.py` marks that trace `answer_correct=False`. Models are not deterministic, so another run may get all three
+right or miss a different one.
 
 ## Run it yourself
 
@@ -55,7 +61,7 @@ calls (5,635, 8,430 and 5,383 tokens), and all three answers matched the CSV: B2
    to a local Opik, also set `OPIK_URL_OVERRIDE=http://localhost:5173/api/` and `OPIK_WORKSPACE=default`. For Comet
    Cloud set `OPIK_API_KEY` and `OPIK_WORKSPACE` instead and leave the override out.
 2. `uv sync`
-3. `uv run python main.py` (about 45 seconds, a fraction of a cent)
+3. `uv run python main.py` (about 45 seconds, about 0.4 cents in total)
 4. `uv run python verify.py` to read the traces back and grade the answers.
 5. `uv run pytest` for the offline tests.
 
@@ -71,7 +77,14 @@ calls (5,635, 8,430 and 5,383 tokens), and all three answers matched the CSV: B2
 
 ## Gotchas we hit
 
-- Nothing here yet.
+- **Symptom:** the `llm` spans show model and token usage, but cost is empty and `total_estimated_cost` is `None`.
+  **Cause:** OpenInference sends `llm.model_name` but no provider, and Opik needs a provider to look up a price.
+  **Fix:** add `gen_ai.system="openai"` to LLM spans on their way out. `tracing.py` does this with a thin exporter
+  wrapper (`ProviderTaggingExporter`), because finished spans are read-only. After it, each `OpenAIModel.generate`
+  span shows provider `openai` and a cost.
+- **Symptom:** summing usage or cost over every `llm` span counts the tokens twice. **Cause:** the `CodeAgent.run`
+  span is also typed `llm` and carries the whole run's total usage, but has no model. **Fix:** filter to spans that
+  have a `model`, as `verify.py` does.
 
 ## How it's put together
 
