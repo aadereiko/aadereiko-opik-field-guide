@@ -8,6 +8,8 @@ if (!process.env.OPENAI_API_KEY) {
 }
 delete process.env.OPENAI_BASE_URL;
 
+// Tracing starts before the agent module loads so BeeAI is patched before the first agent.run().
+const { shutdownTracing, PROJECT_NAME } = await import("./instrumentation.ts");
 const { answerQuestion } = await import("./agent.ts");
 
 const QUESTIONS = [
@@ -21,3 +23,7 @@ for (const [i, question] of QUESTIONS.entries()) {
   console.log(`Customer: ${question}`);
   console.log(`Answer:\n${await answerQuestion(question)}`);
 }
+
+// Flushes the exporter so the last spans reach Opik before the process exits.
+await shutdownTracing();
+console.log(`\nDone. Open the "${PROJECT_NAME}" project in Opik to see the traces.`);

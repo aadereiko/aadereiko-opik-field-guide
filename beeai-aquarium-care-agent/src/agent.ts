@@ -1,6 +1,7 @@
 import { ReActAgent } from "beeai-framework/agents/react/agent";
 import { OpenAIChatModel } from "beeai-framework/adapters/openai/backend/chat";
 import { UnconstrainedMemory } from "beeai-framework/memory/unconstrainedMemory";
+import { MODEL_NAME } from "./model.ts";
 import { ALL_TOOLS } from "./tools.ts";
 
 const CARE_INSTRUCTIONS = `You are the tank-care assistant at Reefside Aquatics, a fictional fish shop.
@@ -12,7 +13,7 @@ Answer the customer's question about their aquarium. Rules:
 
 export function createCareAgent(): ReActAgent {
   return new ReActAgent({
-    llm: new OpenAIChatModel("gpt-4o-mini"),
+    llm: new OpenAIChatModel(MODEL_NAME),
     tools: ALL_TOOLS,
     memory: new UnconstrainedMemory(),
   });
