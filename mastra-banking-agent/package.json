@@ -1,0 +1,25 @@
+{
+  "name": "mastra-banking-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Mastra personal-banking agent with balance, transaction and card-freeze tools.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "demo": "tsx src/demo.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.42",
+    "@mastra/core": "^1.86.0",
+    "dotenv": "^17.2.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
