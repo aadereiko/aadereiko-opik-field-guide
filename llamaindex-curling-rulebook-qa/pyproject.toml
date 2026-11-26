@@ -1,0 +1,23 @@
+[project]
+name = "llamaindex-curling-rulebook-qa"
+version = "0.1.0"
+description = "Rule-level Q&A over generated curling-league rulebook PDFs with LlamaIndex, traced and tested with Opik"
+requires-python = ">=3.12"
+dependencies = [
+    "llama-index>=0.14.25",
+    "llama-index-callbacks-opik>=1.4.0",
+    "llama-index-readers-file>=0.7.0",
+    "opik==2.3.4",
+    "python-dotenv>=1.2.4",
+    "reportlab>=5.0.1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.setuptools]
+py-modules = []
