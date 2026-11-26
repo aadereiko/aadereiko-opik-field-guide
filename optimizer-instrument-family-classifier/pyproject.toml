@@ -1,0 +1,13 @@
+[project]
+name = "optimizer-instrument-family-classifier"
+version = "0.1.0"
+description = "Opik Agent Optimizer rewrites a vague instrument-family classifier prompt and saves the winner to the prompt library"
+requires-python = ">=3.12"
+dependencies = [
+    "opik==2.3.4",
+    "opik-optimizer==3.2.0",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]

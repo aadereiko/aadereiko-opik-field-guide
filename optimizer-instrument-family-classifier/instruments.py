@@ -1,0 +1,28 @@
+FAMILIES = ("strings", "woodwind", "brass", "percussion")
+
+INSTRUMENTS: list[tuple[str, str]] = [
+    ("A wooden box with four strings, held under the chin and played with a horsehair bow.", "strings"),
+    ("A large upright instrument with a long neck, stood on the floor and bowed, its low tone anchoring an orchestra.", "strings"),
+    ("A triangular frame with forty-seven plucked strings and seven foot pedals that shift the pitch.", "strings"),
+    ("A small four-string instrument from Hawaii, strummed with the fingers, with a bright, plinky sound.", "strings"),
+    ("A fretted, pear-shaped instrument with a bent-back neck, plucked in medieval and Renaissance music.", "strings"),
+    ("A cabinet of felt hammers that strike steel strings when the player presses black and white keys.", "strings"),
+    ("A long slender tube of wood with a single reed on the mouthpiece, played upright with a dark, woody tone.", "woodwind"),
+    ("A narrow metal tube held sideways; the player blows across a hole near one end, with no reed at all.", "woodwind"),
+    ("A curved metal body with a single reed on a bent neck, a jazz staple although it is made of brass.", "woodwind"),
+    ("A long double-reed tube played upright, with a deep, buzzy voice at the bottom of the orchestra.", "woodwind"),
+    ("A small wooden recorder-like pipe with eight finger holes, blown through a whistle mouthpiece.", "woodwind"),
+    ("A bag filled with air, squeezed under the arm, feeding several reed pipes at once.", "woodwind"),
+    ("A coiled metal tube with three piston valves, played by buzzing the lips into a cup mouthpiece.", "brass"),
+    ("A long slide of metal tubing that the player extends and retracts to change pitch.", "brass"),
+    ("A huge wraparound tube worn over the shoulder, used in marching bands for the bass line.", "brass"),
+    ("A bright, straight, folded tube with three valves, the lead voice of a jazz horn section.", "brass"),
+    ("A coiled spiral of tubing with a wide flared bell, played with the right hand tucked inside the bell.", "brass"),
+    ("A simple tube with no valves, a mouthpiece like a cup, and only the notes of the harmonic series.", "brass"),
+    ("A round frame stretched with skin, played by striking it with the hand or a stick to get a deep thump.", "percussion"),
+    ("Two thin metal discs clashed together or struck with a stick for a shimmering crash.", "percussion"),
+    ("A row of tuned wooden bars laid out like a keyboard and struck with soft mallets.", "percussion"),
+    ("A small metal triangle hung from a string and tapped with a metal beater for a high ting.", "percussion"),
+    ("A hollow gourd filled with seeds and shaken to make a rattling rhythm.", "percussion"),
+    ("A large hanging bronze disc hit with a padded mallet to produce a long, rolling boom.", "percussion"),
+]
