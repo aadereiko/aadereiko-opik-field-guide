@@ -23,6 +23,9 @@ Rules:
 - Digits spoken one by one ("four seven two") become digits ("472").
 - needs_helicopter is true only if an evacuation was requested and not
   later cancelled.
+- next_report_minutes is only for the field team saying when it will call or
+  report again. "We can hold for ninety minutes" or "the light goes in an
+  hour" are not report times, so leave it null for those.
 - Never invent a field. Use null when the radio call does not say.
 """
 

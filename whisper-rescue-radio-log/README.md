@@ -22,9 +22,13 @@ A pipeline of three steps, one trace per call: voice the call, transcribe it, ex
 
 ## See it in Opik
 
-Open the `whisper-rescue-radio-log` project. The Traces tab shows a trace named `log-radio-call` for each call. Open one and press play on the audio attachment at the trace level: that is the call as the pipeline heard it. Below it is the span tree: `synthesize-audio` (the TTS turns as `llm` spans with the TTS model and characters priced as usage), `transcribe`, and `extract-entry` with a `chat_completion_create` `llm` span showing tokens and cost. The `transcribe` span is a plain `general` span: its output is the Whisper transcript, but Whisper calls are not wrapped by `track_openai`, so it carries no usage or cost.
+Open the `whisper-rescue-radio-log` project. The Traces tab holds eight traces after the full run: two named `log-radio-call` (one per radio call) and six named `evaluation_task` (the suite's three runs of each of the two items).
 
-Then open Test suites and pick `radio-log-field-suite`. Each row is one transcript run through the extractor, with a pass or fail per assertion and the judge's reason beside it. Each item is run three times and passes when two runs pass.
+Open a `log-radio-call` trace and look at the attachments at trace level: `alder-ridge-casualty.mp3` (about 600 KB) or `birch-gully-search.mp3` (about 470 KB). Press play. That is the call as the pipeline heard it. The span tree holds `synthesize-audio` with four (Alder) or three (Birch) `audio.speech.create` spans, each an `llm` span for `gpt-4o-mini-tts` with a cost of roughly $0.00003 to $0.00016, then `transcribe`, then `extract-entry` with one `chat_completion_create` `llm` span for `gpt-4o-mini` showing about 400 tokens and a cost near $0.0001. The `transcribe` span is a plain `general` span. Its output is the Whisper transcript, but Whisper calls are not wrapped by `track_openai`, so it carries no usage or cost.
+
+Then open Test suites and pick `radio-log-field-suite`, and look at its latest experiment. Each of the two items (one per call) ran three times, and the table shows a pass or fail per assertion with the judge's reason beside it.
+
+The suite earns its place on the Alder call. Before the prompt carried the rule about report times, the extractor wrote `next_report_minutes: 90` for Alder, copying the "we can hold for another 90 minutes" line. The suite result was 1 of 2 items passed. The judge flagged the 90 in only two of the three Alder runs and waved it through in the third, which is why one judge run is not a verdict. With the rule in `logbook.py`, the same suite passes 2 of 2 and all 18 judge verdicts pass.
 
 ## Run it yourself
 
@@ -41,8 +45,13 @@ Then open Test suites and pick `radio-log-field-suite`. Each row is one transcri
 - Compare the `transcribe` output with the script in `calls.py`. Whisper turns "Alder One" into "Alder 1" and "bivvy" into "bivy".
 - Add a fourth assertion to `suite.py` and run it again. Then notice that the suite still holds the old list (see Gotchas).
 - Change `runs_per_item` to 1 and run the suite a few times. Compare how steady the verdict is.
+- Delete the "not report times" rule from `EXTRACTION_PROMPT`, delete the saved suite (see Gotchas), and run the suite again. The 90-minute hold comes back.
 
 ## Gotchas we hit
+
+**Symptom:** the log shows `Next call: in 90 min` for a team that never said when it would call again.
+**Cause:** the extractor saw "we can hold here for another ninety minutes" and filled the only duration it found. Nothing errors, and a single judge run catches it only part of the time.
+**Fix:** say what the field means and what it does not mean, in the prompt: `next_report_minutes is only for the field team saying when it will call or report again. "We can hold for ninety minutes" ... are not report times, so leave it null.` Then run the suite again.
 
 **Symptom:** you edit `ASSERTIONS` in `suite.py`, but the judge's reasons still talk about the old wording.
 **Cause:** `get_or_create_test_suite` returns the suite already saved under that name; it does not update its assertions.
