@@ -1,0 +1,6 @@
+{
+  "HO-4471": {"holder": "Marta Okonkwo", "type": "home", "active": true, "deductible_usd": 1000, "covers": ["water damage", "fire", "theft", "storm"], "limit_usd": 250000},
+  "HO-5120": {"holder": "Daniel Reyes", "type": "home", "active": true, "deductible_usd": 2500, "covers": ["fire", "theft"], "limit_usd": 180000},
+  "AU-9082": {"holder": "Priya Natarajan", "type": "auto", "active": true, "deductible_usd": 500, "covers": ["collision", "glass", "theft"], "limit_usd": 40000},
+  "AU-3317": {"holder": "Tom Lindqvist", "type": "auto", "active": false, "deductible_usd": 500, "covers": ["collision", "glass"], "limit_usd": 30000}
+}
