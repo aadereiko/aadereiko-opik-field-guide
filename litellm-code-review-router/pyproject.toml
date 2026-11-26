@@ -5,6 +5,7 @@ description = "Send the same code-review prompts to several OpenAI models throug
 requires-python = ">=3.12"
 dependencies = [
     "litellm>=1.79",
+    "opik==2.3.4",
     "python-dotenv>=1.2.3",
 ]
 

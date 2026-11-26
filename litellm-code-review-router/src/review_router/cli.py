@@ -21,10 +21,13 @@ def main(argv: list[str] | None = None) -> int:
     from .diffs import load_diffs
     from .report import format_table, summarize
     from .router import route_all
+    from .tracing import enable_tracing, flush_traces
 
+    enable_tracing()
     diffs = load_diffs(args.diffs)
     print(f"Reviewing {len(diffs)} diffs with {len(args.models)} models")
     results = route_all(args.models, diffs)
+    flush_traces()
     print()
     print(format_table(summarize(results)))
     return 0

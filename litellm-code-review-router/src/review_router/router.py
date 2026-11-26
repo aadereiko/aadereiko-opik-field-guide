@@ -5,6 +5,7 @@ import litellm
 
 from .diffs import Diff
 from .prompts import build_messages, extract_verdict
+from .tracing import trace_metadata
 
 
 @dataclass(frozen=True)
@@ -24,6 +25,7 @@ def review_diff(model: str, diff: Diff) -> ReviewResult:
         model=model,
         messages=build_messages(diff),
         temperature=0,
+        metadata=trace_metadata(model, diff),
     )
     latency = time.perf_counter() - start
     review = response.choices[0].message.content or ""

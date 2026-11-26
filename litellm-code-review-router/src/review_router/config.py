@@ -8,7 +8,7 @@ PROJECT_NAME = "litellm-code-review-router"
 MODELS = [
     "openai/gpt-4o-mini",
     "openai/gpt-4.1-mini",
-    "openai/gpt-4.1-nano",
+    "openai/gpt-4.1",
 ]
 
 DIFFS_DIR = Path(__file__).resolve().parents[2] / "data" / "diffs"
