@@ -4,7 +4,15 @@ services:
     container_name: n8n-makerspace-booking-review
     ports:
       - "${N8N_HOST_PORT:-5678}:5678"
+    # Lets the container reach an Opik running on the host (local install) as host.docker.internal, on Linux too.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      # Where the hooks send spans, and the headers Opik routes them by. setup.sh derives both from the repo-root
+      # .env: the projectName header puts every execution into the n8n-makerspace-booking-review project.
+      OTEL_EXPORTER_OTLP_ENDPOINT: "${OPIK_OTLP_ENDPOINT:-http://host.docker.internal:5173/api/v1/private/otel}"
+      OTEL_EXPORTER_OTLP_HEADERS: "${OPIK_OTLP_HEADERS:-Comet-Workspace=default,projectName=n8n-makerspace-booking-review}"
+      N8N_OTEL_SERVICE_NAME: "n8n-makerspace-booking-review"
       N8N_SECURE_COOKIE: "false"
       N8N_RUNNERS_ENABLED: "true"
       N8N_DIAGNOSTICS_ENABLED: "false"

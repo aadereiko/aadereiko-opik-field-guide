@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Starts n8n in Docker, claims the instance, stores the OpenAI credential and imports + activates the workflow.
+# Starts n8n in Docker (with Opik tracing hooks), claims the instance, stores the OpenAI credential and imports + activates the workflow.
 # Needs docker, curl and python3. Safe to run again: it logs in instead of re-claiming and replaces the workflow.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -13,6 +13,17 @@ load_env() {
 }
 load_env
 : "${OPENAI_API_KEY:?OPENAI_API_KEY is not set (shell or repo-root .env)}"
+
+# Opik's OTLP endpoint, as seen from inside the container. A local Opik (OPIK_URL_OVERRIDE on localhost) is reached
+# through host.docker.internal; without OPIK_URL_OVERRIDE the spans go to Opik Cloud, which also needs OPIK_API_KEY.
+OPIK_API_BASE="${OPIK_URL_OVERRIDE:-https://www.comet.com/opik/api/}"
+OPIK_API_BASE="${OPIK_API_BASE%/}"
+OPIK_API_BASE="${OPIK_API_BASE/localhost/host.docker.internal}"
+OPIK_API_BASE="${OPIK_API_BASE/127.0.0.1/host.docker.internal}"
+export OPIK_OTLP_ENDPOINT="$OPIK_API_BASE/v1/private/otel"
+export OPIK_OTLP_HEADERS="Comet-Workspace=${OPIK_WORKSPACE:-default},projectName=n8n-makerspace-booking-review"
+if [ -n "${OPIK_API_KEY:-}" ]; then OPIK_OTLP_HEADERS="Authorization=$OPIK_API_KEY,$OPIK_OTLP_HEADERS"; fi
+echo "-> spans go to $OPIK_OTLP_ENDPOINT"
 
 PORT="${N8N_HOST_PORT:-5678}"
 BASE="http://localhost:$PORT"
