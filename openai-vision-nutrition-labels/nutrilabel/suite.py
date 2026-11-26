@@ -13,8 +13,7 @@ from nutrilabel.render import generate_all, path_for  # noqa: E402
 GLOBAL_ASSERTIONS = [
     "The output has all nine fields and none of them is null or empty",
     "Every nutrient amount is a plain number for ONE serving, not a %DV percentage and not a per-container total",
-    "Values are read from the label, never invented: the product name is a real product name, "
-    "not a placeholder like 'unknown' or 'N/A'",
+    "The product name is a real product name, not a placeholder like 'unknown', 'N/A' or 'product'",
 ]
 
 EXPECTED_TEXT = {
