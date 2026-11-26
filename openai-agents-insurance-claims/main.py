@@ -5,9 +5,19 @@ from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(usecwd=True) or Path(__file__).resolve().parent.parent / ".env")
 
-from agents import Agent, Runner
+import os
+
+os.environ.setdefault("OPIK_PROJECT_NAME", "openai-agents-insurance-claims")
+
+import opik
+from agents import Agent, Runner, set_trace_processors, trace
+from opik.integrations.openai.agents import OpikTracingProcessor
 
 from tools import estimate_payout, file_claim, lookup_policy
+
+# OpikTracingProcessor receives every Agents SDK span: agent, handoff, function (tool) and
+# generation (llm). Without it the SDK traces only to OpenAI's own dashboard, not Opik.
+set_trace_processors([OpikTracingProcessor()])
 
 MODEL = "gpt-4o-mini"
 
@@ -75,10 +85,17 @@ def run_demo() -> None:
         for user_message in user_turns:
             print(f"\nCustomer: {user_message}")
             conversation_input.append({"role": "user", "content": user_message})
-            result = Runner.run_sync(triage_agent, conversation_input)
+            # group_id becomes the Opik thread id, so all turns of one conversation
+            # appear as a single thread in the Threads tab instead of loose traces.
+            with trace(workflow_name="Claim intake", group_id=thread_id):
+                result = Runner.run_sync(triage_agent, conversation_input)
             print(f"Agent ({result.last_agent.name}): {result.final_output}")
             conversation_input = result.to_input_list()
 
 
 if __name__ == "__main__":
-    run_demo()
+    try:
+        run_demo()
+    finally:
+        # Traces are sent in batches in the background; flushing stops the last ones being lost at exit.
+        opik.flush_tracker()
