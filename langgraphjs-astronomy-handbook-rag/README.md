@@ -41,7 +41,7 @@ Open the `langgraphjs-astronomy-handbook-rag` project at `http://localhost:5173`
 - `hallucination_metric` averages **0.125**. Seven answers score 0. One row scores 1: the question about returning a telescope two weeks late. The assistant answered "you lose 2 weeks of borrowing rights", which is right (the handbook says 1 week per week overdue), but the judge model decided it was wrong. Open that row's score reason to see it. The score is only as good as the judge, so read reasons before trusting a number.
 - `context_precision` averages **0.2917**. Every answerable question scores 0.33, because exactly one of the three retrieved sections was relevant. The eclipse question scores 0 because the handbook says nothing about it, and the assistant correctly said "I don't know", which also earns a hallucination score of 0.
 
-Each experiment row opens an `evaluation_task` trace holding the task and the two metric spans.
+Each experiment row opens an `evaluation_task` trace holding the task and the two metric spans. The graph spans for that row live in a separate trace named `LangGraph`, tagged `experiment:handbook-rag-k3` (see Gotchas).
 
 **A quick comparison.** Running with `RETRIEVE_K=1` creates `handbook-rag-k1`. In my run it scored context precision **0.875** (seven of eight top hits were relevant) with hallucination **0.0**. Fewer passages means less noise. It also means a question that needs two sections would have only one to work with, which this small dataset does not test.
 
@@ -71,6 +71,18 @@ Each experiment row opens an `evaluation_task` trace holding the task and the tw
 ```
 
 **`ContextPrecision` is not exported from `opik`.** The TypeScript SDK ships `Hallucination` but no context-precision metric. Extend `BaseMetric` yourself (see `src/metrics.ts`): give it a name, a zod `validationSchema`, and a `score()` that returns `{ name, value, reason }`. `evaluate()` then records it like a built-in.
+
+**An experiment row opens a trace with no `retrieve` or `generate` spans.** `evaluate()` creates an `evaluation_task` trace per row, and `OpikCallbackHandler` always opens its own root trace rather than nesting inside it. The graph spans end up in a separate `LangGraph` trace that looks like an unrelated run. Tag the handler so you can find it:
+
+```ts
+new OpikCallbackHandler({
+  projectName, client,
+  tags: [`experiment:${experimentName}`] as unknown as [],
+  metadata: { question: item.question },
+});
+```
+
+The cast is needed because the handler types `tags` as the empty tuple `[]`. In Opik, filter traces by that tag to see the graph behind any row.
 
 ## How it's put together
 

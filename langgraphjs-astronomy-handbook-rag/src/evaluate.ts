@@ -8,6 +8,7 @@ import { RETRIEVE_K } from "./graph.js";
 
 export async function runExperiment(client: Opik, k: number = RETRIEVE_K) {
   const app = await createApp(k);
+  const experimentName = `handbook-rag-k${k}`;
 
   // The dataset is stored in Opik; insert() skips items that already exist, so re-runs
   // don't duplicate rows.
@@ -15,7 +16,16 @@ export async function runExperiment(client: Opik, k: number = RETRIEVE_K) {
   await dataset.insert(DATASET_ITEMS);
 
   const task = async (item: QAItem) => {
-    const handler = new OpikCallbackHandler({ projectName: PROJECT_NAME, client });
+    // The handler always opens its own root trace instead of nesting under the experiment
+    // item's evaluation_task trace. Tagging it with the experiment name is how you find the
+    // graph trace (retrieve, generate, ChatOpenAI) behind a row. The option is typed as `[]`,
+    // hence the cast.
+    const handler = new OpikCallbackHandler({
+      projectName: PROJECT_NAME,
+      client,
+      tags: [`experiment:${experimentName}`] as unknown as [],
+      metadata: { question: item.question },
+    });
     const result = await app.invoke({ question: item.question }, { callbacks: [handler] });
     return { output: result.answer, context: result.context };
   };
@@ -27,7 +37,7 @@ export async function runExperiment(client: Opik, k: number = RETRIEVE_K) {
     task,
     scoringMetrics: [new Hallucination({ model: JUDGE_MODEL }), new ContextPrecision()],
     scoringKeyMapping: { input: "question" },
-    experimentName: `handbook-rag-k${k}`,
+    experimentName,
     experimentConfig: { retrieve_k: k, generator: "gpt-4o-mini", judge: JUDGE_MODEL },
     client,
     projectName: PROJECT_NAME,
