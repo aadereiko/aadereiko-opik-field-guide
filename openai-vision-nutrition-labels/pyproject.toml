@@ -1,0 +1,28 @@
+[project]
+name = "openai-vision-nutrition-labels"
+version = "0.1.0"
+description = "Typed nutrition-facts fields read from label images with OpenAI vision, packaged with a CLI"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=1.60",
+    "pillow>=11.0",
+    "pydantic>=2.7",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+nutrilabel = "nutrilabel.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["nutrilabel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
